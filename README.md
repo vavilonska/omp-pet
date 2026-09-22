@@ -1,113 +1,67 @@
-# OMP Pet Adapter
+# OMP Pet / OMP 桌宠
 
-OMP Pet Adapter is a standalone desktop-pet runtime plus an Oh My Pi extension. It lets OMP summon and control Codex-compatible sprite pets through `/pet` without coupling the pet process to OMP internals.
+[中文](#中文) · [English](#english)
 
-This repository currently contains the framework only. It does not import, copy, or bundle Angela or any other character artwork.
+## 中文
 
-## Download and install
+独立运行的 Windows 桌宠与 Oh My Pi 扩展。用 `/pet` 显示宠物，以任务气泡呈现当前工作、后台任务和完成提醒；每个 OMP 会话使用独立运行进程。
 
-Download the Windows x64 ZIP from [Releases](https://github.com/vavilonska/omp-pet/releases), extract it, and run `install.cmd`. Restart OMP, then run `/pet`.
+### 安装与使用
 
-Requires Windows x64, Oh My Pi and Microsoft Edge WebView2 Runtime. The archive includes the runtime and extension; end users do not need Bun or Rust. No character artwork is bundled: import your own compatible v2 pet with `/pet import "C:\path\to\pet-package"`. Until then a placeholder is shown. See [package format](docs/PET_PACKAGE.md).
+1. 从 [Releases](https://github.com/vavilonska/omp-pet/releases) 下载 Windows x64 ZIP 并完整解压。
+2. 运行 `install.cmd`，任务结束后重启 OMP，再执行 `/pet`。
+3. 自行准备有权使用的 v2 宠物包，执行 `/pet import "C:\path\to\pet-package"`。包内包含 `pet.json` 和 8×11 精灵图，格式见 [宠物包说明](docs/PET_PACKAGE.md)。
 
-This is an independent community project, not an official OpenAI or Oh My Pi product.
+需要 Windows x64、Oh My Pi 和 Microsoft Edge WebView2 Runtime。安装包已包含扩展和桌宠运行程序，使用时不需要 Bun 或 Rust。**不附带角色素材**；未导入宠物时显示占位内容。命名配置可运行 `install.ps1 -Profile work`；卸载运行 `uninstall.cmd`，不删除已导入宠物数据。
 
-## What is implemented
+### 功能和边界
 
-- `/pet` starts the runtime on demand and shows the pet window.
-- `/pet list`, `/pet select`, `/pet use <id>`, `/pet next`, and `/pet prev` switch installed pets.
-- `/pet hide`, `/pet show`, and `/pet stop` control only the OMP pet process.
-- `/pet events on|off` controls OMP event-driven animations.
-- `/pet debug on|off|status` controls the persisted animation/reason overlay; it is off by default.
-- `/pet play <state>` previews three complete animation cycles.
-- `/pet import "<folder>"` is the explicit future import path; nothing is imported automatically.
-- `/pet status` and `/pet doctor` expose runtime diagnostics.
-- Activity bubbles use OMP's own tool intent as the title, a redacted command or safe task summary as the detail, and live elapsed time for active/background work.
-- On Windows, activity cards use a native acrylic backdrop limited to their rounded outlines, with a neutral tint and a subtle inner highlight. Text remains opaque and the area around the pet stays transparent. Subagent titles are 12px with 11px detail text. Native title/icon decorations are removed and clipping survives hide/show. The main bubble stays 128px high to keep streaming updates steady. Commands show `已运行命令` without replacing the task title; replies show their beginning and clip to the available space.
-- Multiple background/subagent bubbles start as one stacked summary showing the count. Click it (or press Enter/Space) to unfold the list; click its header again to stack the whole group. Each card can also expand its full title/detail. Both choices survive activity updates. The window grows upward around the pet and shrinks when cards collapse/disappear; long lists scroll within the monitor work area.
-- Completed turns retain an `已完成` bubble until clicked or the next turn/session. Click or Enter/Space dismisses the reminder and attempts to return to the launching OMP terminal window on Windows. Dismissal survives heartbeat snapshots for the current runtime, even if Windows cannot focus the terminal; the next completed turn shows a new reminder. The owner PID and creation time are checked; shared Windows Terminal tabs are not selected individually. Completion is recovered from the live OMP session after runtime recreation, not archived after OMP exits.
-- Hover jumps, dragging runs left/right, waking waves, and the pet looks toward the desktop cursor. Click toggles tasks; right click opens pet controls. Reduced-motion preferences are respected.
-- Pet animations use Codex desktop's per-frame cadence instead of averaged FPS. See [`docs/ANIMATION_TIMING.md`](docs/ANIMATION_TIMING.md) for the versioned timing table and OMP playback policy.
-- Each OMP session launches an isolated pet runtime. Its pet exits automatically with that session without stopping another session's pet.
-- On Windows, native window regions follow the visible bubble cards and pet area, so
-  blank space above and between them passes clicks through to the desktop below.
+- `/pet list`、`/pet select`、`/pet use <id>`、`/pet next`、`/pet prev` 切换宠物；`hide`、`show`、`stop` 控制本会话宠物。
+- 任务气泡保留工作标题；后台任务可展开；完成提醒保留至点击或下一轮。点击完成提醒会尝试返回原 OMP 窗口，但 Windows 不一定允许抢占焦点。
+- 支持拖动、悬停、16 向注视、逐帧动画和减少动态效果设置。`/pet play <state>` 预览动画，`/pet doctor` 检查运行状态。
+- 默认数据目录 `%USERPROFILE%\.omp\omp-pet`，可用 `OMP_PET_DATA_DIR` 覆盖。本机通信使用随机端口和 Token，仅监听 `127.0.0.1`。
+- 只接收 OMP 事件，不读取 Codex 会话，也不自动导入第三方角色。空白窗口区域允许鼠标穿透。
 
-The OMP extension sends only versioned events whose source is `omp`. Every OMP session gets a private runtime descriptor and process. It does not read Codex state, expose hidden reasoning, or reuse a Codex event socket, so opening both desktop pets does not mix their event displays.
+### 开发
 
-## Build and try the empty framework
-
-Requirements: OMP 18+, Bun 1.3+, a current stable Rust toolchain, and WebView2 on Windows.
+需要 Bun 1.3+、当前稳定版 Rust 和 [Tauri 2 Windows 开发依赖](https://v2.tauri.app/start/prerequisites/)。
 
 ```powershell
 git clone https://github.com/vavilonska/omp-pet.git
 cd omp-pet
-bun install
-bun run build
-bun run runtime:build
-omp -e "C:\src\omp-pet\packages\omp-extension\src\index.ts"
-```
-
-Inside that OMP session, run `/pet`. Until a pet is imported, the window deliberately shows a small “No pet installed” placeholder.
-
-For persistent loading, add the absolute extension path to the `extensions` array in the OMP user settings file, or place a built extension entry in an OMP `extensions` directory. Using `-e` is the least invasive development setup.
-
-## Future pet package
-
-When a Codex pet is finished, put a small `pet.json` beside its existing spritesheet:
-
-```json
-{
-  "id": "my-pet",
-  "displayName": "My Pet",
-  "description": "Optional description",
-  "spriteVersionNumber": 2,
-  "spritesheetPath": "spritesheet.webp"
-}
-```
-
-Then, and only then, import that staging folder:
-
-```text
-/pet import "F:\path\to\finished-pet-package"
-```
-
-The import copies the manifest and spritesheet into OMP Pet's own data directory. The Codex source folder remains unchanged. See [docs/PET_PACKAGE.md](docs/PET_PACKAGE.md) and [docs/omp-pet.schema.json](docs/omp-pet.schema.json).
-
-On Windows, the default data directory is `%USERPROFILE%\.omp\omp-pet`. Keeping pet data under the OMP home avoids `LocalAppData` virtualization differences between OMP instances launched from normal shells and packaged desktop tools. Set `OMP_PET_DATA_DIR` to override it.
-
-## Performance and isolation
-
-- Animation runs at the source state's 5–10 fps, not a permanent 60 fps render loop.
-- The canvas timer stops while the window is not visible.
-- Each visible session pet uses one local process, a 250 ms state-expiry tick, and small batched HTTP messages.
-- The API binds only to `127.0.0.1` on a random port and requires a random bearer token.
-- Runtime discovery lives in a separate OMP data directory and never scans Codex pet folders.
-- Session shutdown stops its owned pet immediately; a 15-second client lease also removes stale activity after crashes.
-
-## Development checks
-
-```powershell
-bun run typecheck
-bun test
-cargo check --manifest-path runtime/src-tauri/Cargo.toml
-bun run smoke:runtime
-```
-
-The smoke test uses an isolated temporary data directory and contains no character assets.
-
-## Sealed Windows package
-
-Build the self-contained Windows x64 package with:
-
-```powershell
+bun install --frozen-lockfile
+bun run check
 bun run package:windows
-bun run verify:package
 ```
 
-The output is written to `release/omp-pet-adapter-0.2.0-win32-x64.zip`, with a sibling SHA-256 file. After extracting it, run `install.cmd`. The installer verifies every payload checksum and copies the compiled extension plus runtime into the active OMP profile's `extensions/omp-pet` directory. OMP then discovers `/pet` on normal startup without `-e`, Bun workspaces, source files, administrator privileges, or symbolic links.
+发布验证包含前端／原生构建、63 项 Bun 测试、28 项 Rust 测试、隔离的无界面运行检查、安装／卸载和文件哈希检查。本次未重新进行人工桌面交互验收。协议和动画说明见 [docs](docs)。
 
-Use `install.ps1 -Profile <name>` and `uninstall.ps1 -Profile <name>` for a named OMP profile. Removing the adapter intentionally leaves imported pet data alone.
+代码采用 [MIT](LICENSE)；字体和其他依赖保留其原许可证，见 [第三方声明](THIRD_PARTY_NOTICES.md)。宠物素材的许可单独处理。本项目与 OpenAI、Oh My Pi 官方无隶属关系。
 
-## License
+## English
 
-Project code is MIT licensed. The bundled Noto Sans SC font retains its SIL Open Font License in `runtime/public/fonts/NotoSansSC-OFL.txt`. Imported pet artwork has its own terms and is not covered by the code license.
+A standalone Windows desktop-pet runtime and Oh My Pi extension. Use `/pet` to show a pet with active-task bubbles, background jobs and completion reminders. Each OMP session has its own runtime process.
+
+### Install and use
+
+1. Download and fully extract the Windows x64 ZIP from [Releases](https://github.com/vavilonska/omp-pet/releases).
+2. Run `install.cmd`, restart OMP after the current task finishes, then run `/pet`.
+3. Supply a v2 pet package you have permission to use and run `/pet import "C:\path\to\pet-package"`. A package contains `pet.json` and an 8×11 spritesheet; see the [package format](docs/PET_PACKAGE.md).
+
+Requires Windows x64, Oh My Pi and Microsoft Edge WebView2 Runtime. The archive includes the extension and native runtime; users do not need Bun or Rust. **No character artwork is bundled**; a placeholder appears until a pet is imported. For a named profile, use `install.ps1 -Profile work`. Run `uninstall.cmd` to remove the adapter without deleting imported pets.
+
+### Features and limits
+
+- Switch pets with `/pet list`, `/pet select`, `/pet use <id>`, `/pet next` or `/pet prev`; `hide`, `show` and `stop` control this session's pet.
+- Activity bubbles preserve task titles; background jobs expand into a list. Completion reminders persist until clicked or the next turn. Clicking attempts to focus the originating OMP window, subject to Windows focus restrictions.
+- Dragging, hover reactions, 16-direction gaze, per-frame animation and reduced motion. Use `/pet play <state>` to preview animation and `/pet doctor` for diagnostics.
+- Data defaults to `%USERPROFILE%\.omp\omp-pet`; override with `OMP_PET_DATA_DIR`. Local communication binds only to `127.0.0.1`, using a random port and token.
+- Accepts OMP events only; does not read Codex sessions or automatically import third-party characters. Empty window regions pass mouse input through.
+
+### Development
+
+Requires Bun 1.3+, current stable Rust and [Tauri 2 Windows prerequisites](https://v2.tauri.app/start/prerequisites/). Use the clone, install, check and packaging commands in the Chinese section above.
+
+Release validation covered frontend/native builds, 63 Bun tests, 28 Rust tests, an isolated headless runtime check, install/uninstall and file hashes. Manual desktop interaction was not revalidated for this release. See [docs](docs) for protocol and animation details.
+
+Code is [MIT](LICENSE). Fonts and dependencies retain their original licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). Pet artwork has separate terms. This is an independent project, not an official OpenAI or Oh My Pi product.

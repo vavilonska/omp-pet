@@ -1,0 +1,12 @@
+{
+  "name": "@omp-pet/core",
+  "version": "0.2.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "bun build ./src/index.ts --outdir ./dist --target browser --format esm",
+    "typecheck": "tsc -p tsconfig.json"
+  }
+}

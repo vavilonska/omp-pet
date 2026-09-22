@@ -1,0 +1,435 @@
+@font-face {
+  font-family: "OMP Noto Sans SC";
+  src: url("/fonts/NotoSansSC-VF.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  color: white;
+  font-family: "Microsoft YaHei", "Microsoft YaHei UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+html,
+body,
+#app {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+#bubble-stack {
+  position: absolute;
+  z-index: 3;
+  bottom: 216px;
+  left: 8px;
+  display: flex;
+  width: 280px;
+  max-height: max(0px, calc(100vh - 224px));
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+#background-group {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 4px;
+}
+
+#background-group.is-collapsed { padding-bottom: 16px; }
+#background-group[hidden], #background-bubbles[hidden] { display: none; }
+
+#background-bubbles {
+  display: flex;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgb(180 180 184 / 38%) transparent;
+  overscroll-behavior: contain;
+  pointer-events: auto;
+}
+
+#background-bubbles:empty { display: none; }
+
+.activity-bubble {
+  position: relative;
+  flex-shrink: 0;
+  pointer-events: auto;
+  --bubble-accent: #a5a5ad;
+  --bubble-outline: #85858b;
+  width: 280px;
+  min-height: 34px;
+  padding: 10px 12px;
+  border: 1px solid var(--bubble-outline);
+  /* Capsule at the default height; extra height extends the straight sides. */
+  border-radius: 32px;
+  /* One rounded translucent surface avoids the square fringe produced by
+     a separate native acrylic HWND. Keep text and the pet fully opaque. */
+  background: rgb(0 0 0 / 82%);
+  background-clip: padding-box;
+  box-shadow: none;
+  color: #e9e9ec;
+  text-shadow: none;
+  transform-origin: 50% 100%;
+  transition: background-color 140ms ease;
+}
+
+/* Preserve the original layout border, but draw one continuous 1.5px SVG
+   stroke. CSS rounds fractional border widths down at 100% display scaling. */
+.activity-bubble.has-outline, .background-stack-layer.has-outline { border-color: transparent; }
+.bubble-outline {
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  width: calc(100% + 2px);
+  height: calc(100% + 2px);
+  overflow: visible;
+  pointer-events: none;
+  z-index: 1;
+}
+.bubble-outline rect { stroke: var(--bubble-outline); shape-rendering: geometricPrecision; transition: stroke 140ms ease; }
+
+.activity-bubble[hidden] {
+  display: none;
+}
+
+#bubble {
+  font-family: "OMP Noto Sans SC", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+  height: auto;
+  min-height: 0;
+  padding: 10px 18px;
+}
+
+#bubble header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 10px;
+}
+
+/* The nested status flex box exposes the dot's baseline, not the text's.
+   Matching line heights and top alignment keep both first text lines level. */
+.bubble-meta { display: flex; align-items: flex-start; gap: 6px; margin-top: 4px; }
+.bubble-status { display: flex; flex: none; align-items: center; gap: 6px; color: #a3a3ab; font-size: 11px; font-weight: 400; line-height: 1.6; white-space: nowrap; }
+.bubble-status .bubble-dot { flex: none; width: 7px; height: 7px; }
+#bubble-title {
+  display: -webkit-box;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+#bubble-detail { position: relative; flex: 1; min-width: 0; margin: 0; padding-left: 9px; font-size: 11px; line-height: 1.6; -webkit-line-clamp: 2; }
+/* Match the original 3px status dot, centered on the detail's first line. */
+#bubble-detail::before { content: ""; position: absolute; left: 0; top: calc(.8em - 1.5px); width: 3px; height: 3px; border-radius: 50%; background: var(--bubble-accent); }
+
+#bubble::after {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  width: 14px;
+  height: 8px;
+  background: rgb(0 0 0 / 80%);
+  content: "";
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  transform: translateX(-50%);
+}
+
+.activity-bubble header {
+  display: grid;
+  grid-template-columns: 7px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.bubble-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--bubble-accent);
+  box-shadow: none;
+}
+
+.activity-bubble strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.45;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity-bubble time {
+  padding: 0;
+  background: transparent;
+  color: #919199;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 400;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-bubble p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 4px 0 0 14px;
+  color: #a3a3ab;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.activity-bubble p[hidden] {
+  display: none;
+}
+
+.activity-bubble[data-kind="approval"] {
+  --bubble-accent: #c5b18e;
+}
+
+.activity-bubble[data-kind="success"] {
+  --bubble-accent: #9caf9f;
+}
+
+.activity-bubble[data-kind="completed"] {
+  --bubble-accent: #9caf9f;
+  cursor: pointer;
+}
+
+.activity-bubble[data-kind="completed"]:focus-visible,
+.background-bubble:focus-visible,
+.background-summary:focus-visible {
+  outline: 1px solid #b8b8bf;
+  outline-offset: -2px;
+}
+
+.activity-bubble[data-kind="error"] {
+  --bubble-accent: #c79a9a;
+}
+
+.activity-bubble[data-kind="retry"] {
+  --bubble-accent: #b1a8be;
+}
+
+.background-bubble {
+  font-family: "Microsoft YaHei", "Microsoft YaHei UI", sans-serif;
+  width: 100%;
+  min-height: 34px;
+  cursor: pointer;
+  padding: 7px 11px;
+  border-radius: 17px;
+  --bubble-outline: #77777d;
+  transform-origin: 50% 100%;
+}
+
+.background-bubble header {
+  grid-template-columns: 3px minmax(0, 1fr) auto 7px;
+  gap: 7px;
+}
+
+.background-bubble:hover, .background-summary:hover {
+  background-color: rgb(0 0 0 / 78%);
+  --bubble-outline: #99999f;
+}
+.background-bubble[aria-expanded="true"] {
+  --bubble-outline: #8b8b91;
+}
+
+.background-bubble strong, .background-summary strong { font-size: 11.5px; font-weight: 400; color: #c3c3ca; }
+
+.background-bubble p {
+  display: none;
+  margin: 5px 0 0 10px;
+  font-size: 11px;
+  -webkit-line-clamp: 1;
+}
+
+.background-bubble[aria-expanded="true"] strong {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.background-bubble[aria-expanded="true"] p:not([hidden]) {
+  display: block;
+  white-space: pre-wrap;
+  -webkit-line-clamp: unset;
+}
+
+.bubble-chevron {
+  width: 5px;
+  height: 5px;
+  border-right: 1px solid #93939c;
+  border-bottom: 1px solid #93939c;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 140ms ease;
+}
+
+.background-bubble[aria-expanded="true"] .bubble-chevron {
+  transform: translateY(1px) rotate(225deg);
+}
+
+.background-summary {
+  font-family: "Microsoft YaHei", "Microsoft YaHei UI", sans-serif;
+  z-index: 0;
+  min-height: 34px;
+  padding: 7px 12px;
+  cursor: pointer;
+  border-radius: 17px;
+}
+
+.background-summary header { grid-template-columns: 15px minmax(0, 1fr) 7px; gap: 8px; }
+.group-heading { display: flex; align-items: center; gap: 7px; }
+#background-count { color: #96969f; font-size: 10.5px; font-variant-numeric: tabular-nums; }
+.background-summary[aria-expanded="true"] .bubble-chevron { transform: translateY(1px) rotate(225deg); }
+.stack-icon { position: relative; width: 15px; height: 15px; color: #93939c; }
+.stack-icon::before, .stack-icon::after { content: ""; position: absolute; width: 10px; height: 8px; border: 1px solid currentColor; border-radius: 3px; }
+.stack-icon::before { left: 3px; top: 1px; opacity: .5; }
+.stack-icon::after { left: 0; top: 5px; background: #090909; }
+
+.background-stack-peek { display: none; }
+.is-collapsed .background-stack-peek {
+  display: block;
+  position: absolute;
+  height: 8px;
+  overflow: hidden;
+  pointer-events: auto;
+}
+/* Each backing is a complete 34px capsule. Expose its lower arc only below
+   the previous capsule, so translucent layers cannot paint over its border.
+   The 1px offset accounts for the summary's border/padding containing block. */
+.background-stack-peek.stack-near { left: 5px; right: 5px; bottom: -9px; }
+.background-stack-peek.stack-far { left: 11px; right: 11px; bottom: -17px; }
+.background-stack-layer {
+  position: absolute;
+  display: block;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 34px;
+  --bubble-outline: #77777d;
+  border: 1px solid var(--bubble-outline);
+  border-radius: 17px;
+  background: rgb(0 0 0 / 82%);
+  background-clip: padding-box;
+  pointer-events: none;
+}
+.stack-far .background-stack-layer { --bubble-outline: #68686e; }
+
+.bubble-enter {
+  animation: bubble-enter 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes bubble-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#app {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  padding: 8px;
+}
+
+#pet {
+  width: 192px;
+  height: 208px;
+  cursor: grab;
+  image-rendering: auto;
+  touch-action: none;
+}
+
+#pet:active {
+  cursor: grabbing;
+}
+
+#empty {
+  align-self: end;
+  width: 208px;
+  min-height: 128px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 18px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 22px;
+  background: linear-gradient(155deg, rgb(28 34 47 / 92%), rgb(13 17 26 / 86%));
+  box-shadow: 0 14px 38px rgb(0 0 0 / 24%);
+  text-align: center;
+}
+
+#empty[hidden] {
+  display: none;
+}
+
+#empty strong {
+  font-size: 18px;
+}
+
+#empty span {
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+}
+
+#empty small {
+  color: rgb(132 203 255 / 90%);
+  font-size: 11px;
+}
+
+#state {
+  position: absolute;
+  right: 9px;
+  bottom: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgb(9 13 20 / 62%);
+  color: rgb(255 255 255 / 62%);
+  font-size: 9px;
+  pointer-events: none;
+}
+
+#state[hidden] {
+  display: none;
+}
+
+#bubble-stack[hidden], #pet-controls[hidden] { display: none; }
+#pet-controls { position: absolute; bottom: 16px; right: 4px; z-index: 10;
+  display: grid; gap: 3px; background: #20232bf5; padding: 8px; border-radius: 12px; }
+button { color: inherit; background: #ffffff15; border: 0; border-radius: 5px;
+  padding: 5px 7px; cursor: pointer; font: inherit; font-size: 11px; }
+button:hover, button:focus-visible { background: #ffffff30; }
+.activity-bubble footer { display: flex; gap: 5px; margin-top: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

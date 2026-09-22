@@ -1,0 +1,25 @@
+[package]
+name = "omp-pet-runtime"
+version = "0.2.0"
+description = "Low-overhead isolated desktop pet runtime for Oh My Pi"
+authors = ["OMP Pet contributors"]
+edition = "2024"
+
+[lib]
+name = "omp_pet_runtime_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+axum = "0.8.9"
+imagesize = "0.15.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2.11.5", features = ["unstable"] }
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "sync", "time"] }
+uuid = { version = "1", features = ["v4"] }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61.3", features = ["Win32_Graphics_Gdi", "Win32_Graphics_Dwm", "Win32_System_Console", "Win32_System_Threading", "Win32_System_LibraryLoader", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OMP Pet</title>
+    <link rel="preload" href="/fonts/NotoSansSC-VF.ttf" as="font" type="font/ttf" crossorigin />
+  </head>
+  <body>
+    <main id="app" aria-live="polite">
+      <div id="bubble-stack">
+        <div id="background-group" hidden>
+          <section id="background-toggle" class="activity-bubble background-summary" role="button" tabindex="0"
+            aria-expanded="false" aria-controls="background-bubbles">
+            <header>
+              <span class="stack-icon" aria-hidden="true"></span>
+              <span class="group-heading"><strong id="background-title">子代理</strong><span id="background-count"></span></span>
+              <span class="bubble-chevron" aria-hidden="true"></span>
+            </header>
+            <span class="background-stack-peek stack-near" aria-hidden="true"><span class="background-stack-layer"></span></span>
+            <span class="background-stack-peek stack-far" aria-hidden="true"><span class="background-stack-layer"></span></span>
+          </section>
+          <div id="background-bubbles" aria-label="子代理任务"></div>
+        </div>
+        <section id="bubble" class="activity-bubble" hidden role="status" aria-atomic="true">
+          <header>
+            <strong id="bubble-title"></strong>
+            <time id="bubble-elapsed" hidden></time>
+          </header>
+          <div class="bubble-meta">
+            <span class="bubble-status"><span class="bubble-dot" aria-hidden="true"></span><span id="bubble-status"></span></span>
+            <p id="bubble-detail" hidden></p>
+          </div>
+        </section>
+      </div>
+      <canvas id="pet" width="192" height="208" aria-label="OMP desktop pet"></canvas>
+      <section id="empty" hidden>
+        <strong>OMP Pet</strong>
+        <span>No pet installed</span>
+        <small>Use /pet import &lt;folder&gt;</small>
+      </section>
+      <output id="state" hidden>idle</output>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

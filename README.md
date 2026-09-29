@@ -1,5 +1,15 @@
 # OMP Pet / OMP 桌宠
 
+**Animated Windows desktop pets with task bubbles, background-job updates, and completion reminders for Oh My Pi.**
+
+用桌宠气泡呈现 OMP 当前任务、后台工作与完成提醒。
+
+[快速安装](#安装与使用) · [English setup](#install-and-use) · [Download / 下载](https://github.com/vavilonska/omp-pet/releases/latest) · [MIT](LICENSE)
+
+![OMP Pet — conceptual workflow / 功能流程示意](docs/assets/overview.svg)
+
+> Windows x64 + WebView2. Character artwork is not included. / 不附带角色素材，需自行导入宠物包。
+
 [中文](#中文) · [English](#english)
 
 ## 中文
@@ -65,3 +75,7 @@ Requires Bun 1.3+, current stable Rust and [Tauri 2 Windows prerequisites](https
 Release validation covered frontend/native builds, 63 Bun tests, 28 Rust tests, an isolated headless runtime check, install/uninstall and file hashes. Manual desktop interaction was not revalidated for this release. See [docs](docs) for protocol and animation details.
 
 Code is [MIT](LICENSE). Fonts and dependencies retain their original licenses; see [third-party notices](THIRD_PARTY_NOTICES.md). Pet artwork has separate terms. This is an independent project, not an official OpenAI or Oh My Pi product.
+
+## Related projects / 相关项目
+
+[OMPmail](https://github.com/vavilonska/OMPmail) · [TokenLedger OMP](https://github.com/vavilonska/tokenledger-omp) · [All projects / 全部项目](https://github.com/vavilonska#projects--项目)

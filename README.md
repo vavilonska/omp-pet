@@ -78,4 +78,4 @@ Code is [MIT](LICENSE). Fonts and dependencies retain their original licenses; s
 
 ## Related projects / 相关项目
 
-[OMPmail](https://github.com/vavilonska/OMPmail) · [TokenLedger OMP](https://github.com/vavilonska/tokenledger-omp) · [All projects / 全部项目](https://github.com/vavilonska#projects--项目)
+[OMPmail](https://github.com/vavilonska/OMPmail) · [TokenLedger OMP](https://github.com/vavilonska/tokenledger-omp) · [All projects / 全部项目](https://github.com/vavilonska?tab=repositories)
